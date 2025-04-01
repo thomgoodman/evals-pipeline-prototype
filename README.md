@@ -28,4 +28,4 @@ To set up GitHub Actions:
 2. Click on "Settings" > "Secrets and variables" > "Actions"
 3. Click "New repository secret"
 4. Add a secret with name `OPENAI_API_KEY` and your OpenAI API key as the value
-5. Commit and push to trigger the workflow 
+5. Commit and push to trigger the workflow
