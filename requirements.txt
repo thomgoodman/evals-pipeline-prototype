@@ -1,0 +1,10 @@
+langchain-core
+langchain-community
+langchain-openai
+python-dotenv
+openai
+requests
+pyyaml
+pygithub
+ipython
+pytest
