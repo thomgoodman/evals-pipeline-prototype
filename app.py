@@ -9,41 +9,19 @@ _ = load_dotenv(find_dotenv())
 
 delimiter = "####"
 
-quiz_bank = """1. Subject: Leonardo DaVinci
-   Categories: Art, Science
-   Facts:
-    - Painted the Mona Lisa
-    - Studied zoology, anatomy, geology, optics
-    - Designed a flying machine
-  
-2. Subject: Paris
-   Categories: Art, Geography
-   Facts:
-    - Location of the Louvre, the museum where the Mona Lisa is displayed
-    - Capital of France
-    - Most populous city in France
-    - Where Radium and Polonium were discovered by scientists Marie and Pierre Curie
 
-3. Subject: Telescopes
-   Category: Science
-   Facts:
-    - Device to observe different objects
-    - The first refracting telescopes were invented in the Netherlands in the 17th Century
-    - The James Webb space telescope is the largest telescope in space. It uses a gold-berillyum mirror
+def read_file_into_string(file_path):
+    try:
+        with open(file_path, "r") as file:
+            file_content = file.read()
+            return file_content
+    except FileNotFoundError:
+        print(f"The file at '{file_path}' was not found.")
+    except Exception as e:
+        print(f"An error occurred: {e}")
 
-4. Subject: Starry Night
-   Category: Art
-   Facts:
-    - Painted by Vincent van Gogh in 1889
-    - Captures the east-facing view of van Gogh's room in Saint-Rémy-de-Provence
 
-5. Subject: Physics
-   Category: Science
-   Facts:
-    - The sun doesn't change color during sunset.
-    - Water slows the speed of light
-    - The Eiffel Tower in Paris is taller in the summer than the winter due to expansion of the metal.
-"""
+quiz_bank = read_file_into_string("quiz_bank.txt")
 
 system_message = f"""
 Follow these steps to generate a customized quiz for the user.

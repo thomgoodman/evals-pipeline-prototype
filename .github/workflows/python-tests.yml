@@ -5,6 +5,13 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      runReleaseEvals:
+        description: 'Run release evaluation tests'
+        required: true
+        default: 'false'
+        type: boolean
 
 jobs:
   test:
@@ -28,3 +35,10 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         pytest test_assistant.py -v 
+        
+    - name: Run release evaluations
+      if: ${{ github.event.inputs.runReleaseEvals == 'true' }}
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        pytest test_release_evals.py -v 
