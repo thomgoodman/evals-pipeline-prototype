@@ -8,3 +8,4 @@ pyyaml
 pygithub
 ipython
 pytest
+pandas

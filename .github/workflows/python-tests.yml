@@ -12,6 +12,11 @@ on:
         required: true
         default: 'false'
         type: boolean
+      runEvalArtifacts:
+        description: 'Generate evaluation artifacts'
+        required: true
+        default: 'false'
+        type: boolean
 
 jobs:
   test:
@@ -42,3 +47,20 @@ jobs:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |
         pytest test_release_evals.py -v 
+        
+    - name: Generate evaluation artifacts
+      if: ${{ github.event.inputs.runEvalArtifacts == 'true' }}
+      env:
+        OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      run: |
+        python save_eval_artifacts.py
+        mkdir -p /tmp/eval_artifacts
+        cp reports/eval_results_*.html /tmp/eval_artifacts/
+        
+    - name: Upload evaluation artifacts
+      if: ${{ github.event.inputs.runEvalArtifacts == 'true' }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: eval-artifacts-${{ github.run_id }}-${{ github.run_number }}
+        path: /tmp/eval_artifacts
+        retention-days: 30 
