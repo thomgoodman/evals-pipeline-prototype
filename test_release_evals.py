@@ -62,9 +62,9 @@ def test_model_graded_eval_should_fail(known_bad_result):
     eval_agent = create_eval_chain(known_bad_result)
     eval_response = eval_agent.invoke({})
     assert (
-        eval_response == "Y"
-    ), f"expected failure, asserted the response should be 'Y', \
-    got back '{eval_response}'"
+        eval_response == "N"
+    ), f"Expected the response to be 'N' for a non-quiz input, \
+    got '{eval_response}'"
 
 
 # Run all tests if script is executed directly
@@ -79,11 +79,8 @@ if __name__ == "__main__":
 
         print("\n\n========== RUNNING MODEL GRADED EVAL FAILURE TEST ==========")
         known_bad_result = "There are lots of interesting facts. Tell me more about what you'd like to know"
-        try:
-            test_model_graded_eval_should_fail(known_bad_result)
-            print("Test failed as expected!")
-        except AssertionError as e:
-            print(f"Expected failure: {e}")
+        test_model_graded_eval_should_fail(known_bad_result)
+        print("Test passed!")
 
         print("\n\nAll tests completed successfully!")
 
