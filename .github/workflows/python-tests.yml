@@ -59,7 +59,7 @@ jobs:
         
     - name: Upload evaluation artifacts
       if: ${{ github.event.inputs.runEvalArtifacts == 'true' }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v2
       with:
         name: eval-artifacts-${{ github.run_id }}-${{ github.run_number }}
         path: /tmp/eval_artifacts
