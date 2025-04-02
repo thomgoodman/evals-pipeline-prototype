@@ -1,6 +1,6 @@
 # Automated Evaluation Tests
 
-![Tests Status](https://github.com/user/automated-evals/actions/workflows/python-tests.yml/badge.svg)
+![Tests Status](https://github.com/thomgoodman/evals-pipeline-prototype/actions/workflows/python-tests.yml/badge.svg)
 
 An example framework for automated evaluation of AI assistant responses using OpenAI's API. This repository provides tools to systematically test AI model behaviors, detect hallucinations, and measure response quality across various scenarios.
 
