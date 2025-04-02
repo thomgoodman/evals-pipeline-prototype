@@ -69,21 +69,8 @@ def test_model_graded_eval_should_fail(known_bad_result):
 
 # Run all tests if script is executed directly
 if __name__ == "__main__":
-    print("Running all tests...\n")
+    print("Running all tests with pytest...\n")
+    import pytest
 
-    try:
-        print("\n\n========== RUNNING MODEL GRADED EVAL TEST ==========")
-        quiz_request = "Give me a quiz about Geography"
-        test_model_graded_eval(quiz_request)
-        print("Test passed!")
-
-        print("\n\n========== RUNNING MODEL GRADED EVAL FAILURE TEST ==========")
-        known_bad_result = "There are lots of interesting facts. Tell me more about what you'd like to know"
-        test_model_graded_eval_should_fail(known_bad_result)
-        print("Test passed!")
-
-        print("\n\nAll tests completed successfully!")
-
-    except AssertionError as e:
-        print(f"\n\nTEST FAILED: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Run all tests in this file
+    pytest.main(["-v", __file__])

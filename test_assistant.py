@@ -43,20 +43,8 @@ def test_decline_unknown_subjects():
 
 # Run all tests if script is executed directly
 if __name__ == "__main__":
-    print("Running all tests...\n")
+    print("Running all tests with pytest...\n")
+    import pytest
 
-    try:
-        print("\n\n========== RUNNING SCIENCE QUIZ TEST ==========")
-        science_result = test_science_quiz()
-
-        print("\n\n========== RUNNING GEOGRAPHY QUIZ TEST ==========")
-        geography_result = test_geography_quiz()
-
-        print("\n\n========== RUNNING REFUSAL TEST ==========")
-        refusal_result = test_decline_unknown_subjects()
-
-        print("\n\nAll tests passed successfully!")
-
-    except AssertionError as e:
-        print(f"\n\nTEST FAILED: {e}", file=sys.stderr)
-        sys.exit(1)
+    # Run all tests in this file
+    pytest.main(["-v", __file__])
