@@ -71,6 +71,20 @@ Generate and save evaluation artifacts:
 python save_eval_artifacts.py
 ```
 
+### Unit Tests
+
+The project includes comprehensive unit tests in `test_app.py` that verify:
+
+- File operations: Tests for the `read_file_into_string` function with success and error scenarios
+- Quiz generation: Tests for category validation using mock OpenAI responses
+- Error handling: Tests for handling unknown quiz categories
+- All tests use proper mocking to avoid actual API calls
+
+Run the unit tests with:
+```bash
+pytest test_app.py -v
+```
+
 ## 📊 Test Structure
 
 - `test_assistant.py`: Basic assistant response tests
@@ -78,6 +92,10 @@ python save_eval_artifacts.py
 - `test_release_evals.py`: Comprehensive release qualification tests
 - `test_with_dataset.py`: Dataset-based evaluation tests
 - `test_app.py`: Unit tests for the core app functionality
+  - Tests for file reading functionality (`read_file_into_string`)
+  - Quiz category validation tests
+  - Error handling for unknown categories
+  - Mock testing with LangChain components
 - `app.py`: Core assistant chain implementation
 - `quiz_bank.txt`: Knowledge base for quiz generation tests
 
