@@ -35,7 +35,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
-    - name: Run tests
+    - name: Run unit tests
+      run: |
+        pytest test_app.py -v
+        
+    - name: Run assistant tests
       env:
         OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       run: |

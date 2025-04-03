@@ -58,6 +58,7 @@ Run specific test modules:
 ```bash
 pytest test_hallucinations.py -v
 pytest test_release_evals.py -v
+pytest test_app.py -v
 ```
 
 Run tests with dataset:
@@ -76,6 +77,7 @@ python save_eval_artifacts.py
 - `test_hallucinations.py`: Tests for detecting incorrect information
 - `test_release_evals.py`: Comprehensive release qualification tests
 - `test_with_dataset.py`: Dataset-based evaluation tests
+- `test_app.py`: Unit tests for the core app functionality
 - `app.py`: Core assistant chain implementation
 - `quiz_bank.txt`: Knowledge base for quiz generation tests
 
