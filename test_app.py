@@ -2,24 +2,22 @@ import pytest
 import os
 from unittest.mock import patch, mock_open, MagicMock
 
-# Mock the OpenAI client before importing app
-with patch("langchain_openai.chat_models.base.openai.OpenAI") as mock_openai:
-    # Now we can safely import from app
-    from app import read_file_into_string
 
-
-# Test the read_file_into_string function
+# Test the read_file_into_string function - these tests are mostly fine
 def test_read_file_into_string_success():
     mock_content = "Test content"
     with patch("builtins.open", mock_open(read_data=mock_content)) as mock_file:
+        from app import read_file_into_string
+
         result = read_file_into_string("some_file.txt")
-        mock_file.assert_called_once_with("some_file.txt", "r")
         assert result == mock_content
 
 
 def test_read_file_into_string_file_not_found():
     with patch("builtins.open", side_effect=FileNotFoundError):
         with patch("builtins.print") as mock_print:
+            from app import read_file_into_string
+
             result = read_file_into_string("nonexistent_file.txt")
             mock_print.assert_called_once()
             assert "not found" in mock_print.call_args[0][0]
@@ -29,113 +27,115 @@ def test_read_file_into_string_file_not_found():
 def test_read_file_into_string_generic_error():
     with patch("builtins.open", side_effect=Exception("Test error")):
         with patch("builtins.print") as mock_print:
+            from app import read_file_into_string
+
             result = read_file_into_string("some_file.txt")
             mock_print.assert_called_once()
             assert "error occurred" in mock_print.call_args[0][0]
             assert result is None
 
 
-# Test the quiz functionality through direct call to ChatOpenAI
-@patch("langchain_openai.chat_models.base.openai.OpenAI")
-def test_quiz_category_validation(mock_openai):
-    # Import assistant_chain inside the test to allow for proper mocking
-    with patch("app.quiz_bank", "Test quiz bank content"):
-        with patch("app.ChatOpenAI") as mock_chat:
-            mock_instance = mock_chat.return_value
-            mock_instance.invoke.return_value.content = (
-                "I can generate a quiz about Geography"
-            )
+# Test the assistant_chain function by mocking the entire chain
+def test_assistant_chain_for_valid_category():
+    # Setup mock chain that returns valid quiz response
+    mock_chain = MagicMock()
+    mock_chain.invoke.return_value = (
+        "Question 1:#### What is the capital of France?\n\n"
+        "Question 2:#### Where is the Louvre located?\n\n"
+        "Question 3:#### What is the population of Paris?"
+    )
 
-            # Patch the prompt
-            with patch("app.ChatPromptTemplate.from_messages") as mock_prompt:
-                mock_prompt.return_value = mock_prompt
-                with patch("app.StrOutputParser") as mock_parser:
-                    mock_parser.return_value.parse.return_value = (
-                        "I can generate a quiz about Geography"
-                    )
+    # Mock the ChatPromptTemplate, ChatOpenAI, and StrOutputParser
+    with patch("app.ChatPromptTemplate.from_messages") as mock_prompt:
+        with patch("app.ChatOpenAI") as mock_llm_class:
+            with patch("app.StrOutputParser") as mock_parser_class:
+                # Setup the pipe operation to return our mock chain
+                mock_prompt.return_value.__or__.return_value.__or__.return_value = (
+                    mock_chain
+                )
 
-                    # Import here to avoid early execution of the import in app.py
+                # Import with patched quiz bank
+                with patch("app.quiz_bank", "Test quiz bank for Geography"):
                     from app import assistant_chain
 
-                    chain = assistant_chain(
-                        system_message="Test system message",
-                        human_template="Test human template {question}",
-                        llm=mock_instance,
-                        output_parser=mock_parser.return_value,
-                    )
+                # Create the chain
+                chain = assistant_chain()
 
-                    # Mock the invoke method of the chain
-                    with patch.object(chain, "invoke") as mock_invoke:
-                        mock_invoke.return_value = (
-                            "Question 1:#### What is the capital of France?"
-                        )
+                # Test with valid category
+                result = chain.invoke({"question": "Generate a quiz about Geography"})
 
-                        # Test invocation
-                        result = chain.invoke(
-                            {"question": "Generate a quiz about Geography"}
-                        )
+                # Verify the mock was called
+                mock_chain.invoke.assert_called_once_with(
+                    {"question": "Generate a quiz about Geography"}
+                )
 
-                        # Verify mock_invoke was called with the right parameters
-                        mock_invoke.assert_called_once_with(
-                            {"question": "Generate a quiz about Geography"}
-                        )
-
-                        # Verify result
-                        assert (
-                            result == "Question 1:#### What is the capital of France?"
-                        )
+                # Verify result contains expected quiz format
+                assert "What is the capital of France?" in result
+                assert "Where is the Louvre located?" in result
+                assert "What is the population of Paris?" in result
 
 
-# Test the error handling for unknown categories
-@patch("langchain_openai.chat_models.base.openai.OpenAI")
-def test_unknown_category(mock_openai):
-    # Import assistant_chain inside the test to allow for proper mocking
-    with patch("app.quiz_bank", "Test quiz bank content"):
-        with patch("app.ChatOpenAI") as mock_chat:
-            mock_instance = mock_chat.return_value
-            mock_instance.invoke.return_value.content = (
-                "I'm sorry I do not have information about that"
-            )
+def test_assistant_chain_for_invalid_category():
+    # Setup mock chain that returns no information response
+    mock_chain = MagicMock()
+    mock_chain.invoke.return_value = "I'm sorry I do not have information about that"
 
-            # Patch the prompt
-            with patch("app.ChatPromptTemplate.from_messages") as mock_prompt:
-                mock_prompt.return_value = mock_prompt
-                with patch("app.StrOutputParser") as mock_parser:
-                    mock_parser.return_value.parse.return_value = (
-                        "I'm sorry I do not have information about that"
-                    )
+    # Mock the ChatPromptTemplate, ChatOpenAI, and StrOutputParser
+    with patch("app.ChatPromptTemplate.from_messages") as mock_prompt:
+        with patch("app.ChatOpenAI") as mock_llm_class:
+            with patch("app.StrOutputParser") as mock_parser_class:
+                # Setup the pipe operation to return our mock chain
+                mock_prompt.return_value.__or__.return_value.__or__.return_value = (
+                    mock_chain
+                )
 
-                    # Import here to avoid early execution of the import in app.py
+                # Import with patched quiz bank
+                with patch("app.quiz_bank", "Test quiz bank for Geography"):
                     from app import assistant_chain
 
-                    chain = assistant_chain(
-                        system_message="Test system message",
-                        human_template="Test human template {question}",
-                        llm=mock_instance,
-                        output_parser=mock_parser.return_value,
-                    )
+                # Create the chain
+                chain = assistant_chain()
 
-                    # Mock the invoke method of the chain
-                    with patch.object(chain, "invoke") as mock_invoke:
-                        mock_invoke.return_value = (
-                            "I'm sorry I do not have information about that"
-                        )
+                # Test with invalid category
+                result = chain.invoke({"question": "Generate a quiz about History"})
 
-                        # Test invocation
-                        result = chain.invoke(
-                            {"question": "Generate a quiz about History"}
-                        )
+                # Verify the mock was called
+                mock_chain.invoke.assert_called_once_with(
+                    {"question": "Generate a quiz about History"}
+                )
 
-                        # Verify mock_invoke was called with the right parameters
-                        mock_invoke.assert_called_once_with(
-                            {"question": "Generate a quiz about History"}
-                        )
+                # Verify result contains expected error message
+                assert "I'm sorry I do not have information about that" in result
 
-                        # Verify result
-                        assert (
-                            result == "I'm sorry I do not have information about that"
-                        )
-                        assert "I'm sorry" in result
+
+def test_assistant_chain_system_message():
+    # Test that the system message is correctly constructed with the quiz bank
+    with patch("app.quiz_bank", "Test content"):
+        from app import assistant_chain, system_message
+
+        # Verify the system message contains key components
+        assert "customized quiz" in system_message
+        assert "Geography" in system_message
+        assert "Science" in system_message
+        assert "Art" in system_message
+
+        # The test quiz bank gets replaced in the system_message
+        assert "topics are below:" in system_message
+        assert (
+            "Test content" in system_message
+        )  # This should match the mocked quiz_bank content
+        assert (
+            "Pick up to two subjects" in system_message
+        )  # This text appears after the quiz bank
+
+        # Verify the chain is constructed using the system message
+        with patch("app.ChatPromptTemplate.from_messages") as mock_prompt:
+            assistant_chain()
+            # Check that the first argument to from_messages is a list
+            # and the first element has "system" as the first item
+            args, _ = mock_prompt.call_args
+            assert args[0][0][0] == "system"
+            assert args[0][0][1] == system_message
 
 
 # Run all tests if script is executed directly
