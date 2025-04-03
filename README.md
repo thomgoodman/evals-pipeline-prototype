@@ -112,6 +112,23 @@ This repository includes GitHub Actions workflows that automatically run tests o
 3. Create a new repository secret named `OPENAI_API_KEY` with your API key
 4. Push to trigger the workflow
 
+## 🧪 Testing Approach
+
+### Unit Testing Strategy
+
+The unit tests in `test_app.py` use Python's `unittest.mock` library with `MagicMock` to isolate code functionality:
+
+- **Dependency Isolation**: All external dependencies (OpenAI API, file system) are mocked to focus testing on core logic
+- **Mock Control**: Tests precisely control inputs and outputs of dependencies to create predictable test scenarios
+- **Behavior Verification**: Tests verify both return values and that functions interact with dependencies correctly
+
+For example, when testing the assistant chain:
+1. A `MagicMock` replaces the LangChain components and controls responses
+2. Tests verify the function correctly processes both valid and invalid categories
+3. System message construction is verified to contain proper instructions
+
+Unit tests focus on core functionality, while integration and end-to-end testing is handled by `test_assistant.py` and `test_release_evals.py`.
+
 ## 📝 License
 
 [MIT License](LICENSE)
