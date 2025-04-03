@@ -1,8 +1,17 @@
+import pytest
+import logging
 from app import assistant_chain, quiz_bank
 
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
+from langchain.callbacks.tracers.stdout import ConsoleCallbackHandler
+
+
+@pytest.fixture(autouse=True)
+def setup_logging():
+    logging.basicConfig(level=logging.INFO)
+    return logging.getLogger()
 
 
 def create_eval_chain(context, agent_response):
@@ -46,14 +55,27 @@ Output Y if the quiz only contains facts from the question bank, output N if it 
     )
 
 
-def test_model_graded_eval_hallucination():
+def test_model_graded_eval_hallucination(setup_logging, langchain_tracer):
+    logger = setup_logging
+    logger.info("Starting hallucination test")
+
     assistant = assistant_chain()
     quiz_request = "Write me a quiz about books."
-    result = assistant.invoke({"question": quiz_request})
-    print(result)
+    logger.info(f"Sending request to assistant: {quiz_request}")
+
+    # Add callbacks to see detailed LangChain execution
+    result = assistant.invoke(
+        {"question": quiz_request}, config={"callbacks": [langchain_tracer]}
+    )
+    logger.info(f"Assistant response: {result}")
+
     eval_agent = create_eval_chain(quiz_bank, result)
-    eval_response = eval_agent.invoke({})
-    print(eval_response)
+    logger.info("Evaluating response for hallucinations")
+
+    # Add callbacks to see detailed evaluation execution
+    eval_response = eval_agent.invoke({}, config={"callbacks": [langchain_tracer]})
+    logger.info(f"Evaluation result: {eval_response}")
+
     # Our test asks about a subject not in the context, so the agent should answer N
     assert eval_response == "N"
 
@@ -61,7 +83,5 @@ def test_model_graded_eval_hallucination():
 # Run all tests if script is executed directly
 if __name__ == "__main__":
     print("Running all tests with pytest...\n")
-    import pytest
-
     # Run all tests in this file
     pytest.main(["-v", __file__])

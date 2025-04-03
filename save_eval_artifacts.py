@@ -8,6 +8,7 @@ from langchain_core.output_parsers import StrOutputParser
 
 import os
 import datetime
+import logging
 
 eval_system_prompt = """You are an assistant that evaluates how well the quiz assistant
     creates quizzes for a user by looking at the set of facts available to the assistant.
@@ -78,6 +79,16 @@ dataset = [
 ]
 
 
+def setup_logging():
+    """Set up logging for evaluation"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    return logging.getLogger()
+
+
 def create_eval_chain():
     eval_prompt = ChatPromptTemplate.from_messages(
         [
@@ -94,46 +105,72 @@ def create_eval_chain():
 
 
 def evaluate_dataset(dataset, quiz_bank, assistant, evaluator):
+    logger = logging.getLogger()
+    logger.info("Starting dataset evaluation")
+
     eval_results = []
-    for row in dataset:
+    for idx, row in enumerate(dataset):
         eval_result = {}
         user_input = row["input"]
+
+        logger.info(f"Processing example {idx+1}/{len(dataset)}: {user_input}")
+
         answer = assistant.invoke({"question": user_input})
+        logger.info(f"Received assistant response, evaluating...")
+
         eval_response = evaluator.invoke(
             {"context": quiz_bank, "agent_response": answer}
         )
+        logger.info(f"Evaluation complete for example {idx+1}")
 
         eval_result["input"] = user_input
         eval_result["output"] = answer
         eval_result["grader_response"] = eval_response
         eval_results.append(eval_result)
+
+    logger.info(f"Completed evaluation of {len(dataset)} examples")
     return eval_results
 
 
 def report_evals():
+    logger = setup_logging()
+    logger.info("Starting evaluation report generation")
+
     assistant = assistant_chain()
     model_graded_evaluator = create_eval_chain()
+
+    logger.info("Evaluating dataset with assistant and evaluator")
     eval_results = evaluate_dataset(
         dataset, quiz_bank, assistant, model_graded_evaluator
     )
+
+    logger.info("Creating DataFrame from evaluation results")
     df = pd.DataFrame(eval_results)
     ## clean up new lines to be html breaks
     df_html = df.to_html().replace("\\n", "<br>")
 
     # Create reports directory if it doesn't exist
     os.makedirs("reports", exist_ok=True)
+    logger.info("Created reports directory if it didn't exist")
 
     # Create timestamp for filename
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
     filename = f"eval_results_{timestamp}.html"
+    filepath = f"reports/{filename}"
 
     # Save to reports directory in project with timestamp in filename
-    with open(f"reports/{filename}", "w") as f:
+    logger.info(f"Saving evaluation results to {filepath}")
+    with open(filepath, "w") as f:
         f.write(df_html)
+
+    logger.info(f"Evaluation report saved successfully to {filepath}")
 
 
 def main():
+    logger = logging.getLogger()
+    logger.info("Starting evaluation process")
     report_evals()
+    logger.info("Evaluation process completed")
 
 
 if __name__ == "__main__":

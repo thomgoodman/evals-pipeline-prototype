@@ -48,19 +48,42 @@ def quiz_request():
     return "Give me a quiz about Geography"
 
 
-def test_model_graded_eval(quiz_request):
+def test_model_graded_eval(quiz_request, setup_logging, langchain_tracer):
+    logger = setup_logging
+    logger.info("Starting model graded eval test")
+
     assistant = assistant_chain()
-    result = assistant.invoke({"question": quiz_request})
-    print(result)
+    logger.info(f"Sending request: {quiz_request}")
+
+    result = assistant.invoke(
+        {"question": quiz_request}, config={"callbacks": [langchain_tracer]}
+    )
+    logger.info(f"Assistant response: {result}")
+
+    logger.info("Creating evaluation chain")
     eval_agent = create_eval_chain(result)
-    eval_response = eval_agent.invoke({})
+
+    logger.info("Invoking evaluation agent")
+    eval_response = eval_agent.invoke({}, config={"callbacks": [langchain_tracer]})
+    logger.info(f"Evaluation response: {eval_response}")
+
     assert eval_response == "Y"
 
 
-def test_model_graded_eval_should_fail(known_bad_result):
-    print(known_bad_result)
+def test_model_graded_eval_should_fail(
+    known_bad_result, setup_logging, langchain_tracer
+):
+    logger = setup_logging
+    logger.info("Starting model graded eval failure test")
+    logger.info(f"Using known bad result: {known_bad_result}")
+
+    logger.info("Creating evaluation chain")
     eval_agent = create_eval_chain(known_bad_result)
-    eval_response = eval_agent.invoke({})
+
+    logger.info("Invoking evaluation agent")
+    eval_response = eval_agent.invoke({}, config={"callbacks": [langchain_tracer]})
+    logger.info(f"Evaluation response: {eval_response}")
+
     assert (
         eval_response == "N"
     ), f"Expected the response to be 'N' for a non-quiz input, \
