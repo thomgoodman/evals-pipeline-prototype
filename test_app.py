@@ -1,7 +1,11 @@
 import pytest
 import os
-from unittest.mock import patch, mock_open
-from app import read_file_into_string
+from unittest.mock import patch, mock_open, MagicMock
+
+# Mock the OpenAI client before importing app
+with patch("langchain_openai.chat_models.base.openai.OpenAI") as mock_openai:
+    # Now we can safely import from app
+    from app import read_file_into_string
 
 
 # Test the read_file_into_string function
@@ -32,7 +36,9 @@ def test_read_file_into_string_generic_error():
 
 
 # Test the quiz functionality through direct call to ChatOpenAI
-def test_quiz_category_validation():
+@patch("langchain_openai.chat_models.base.openai.OpenAI")
+def test_quiz_category_validation(mock_openai):
+    # Import assistant_chain inside the test to allow for proper mocking
     with patch("app.quiz_bank", "Test quiz bank content"):
         with patch("app.ChatOpenAI") as mock_chat:
             mock_instance = mock_chat.return_value
@@ -81,7 +87,9 @@ def test_quiz_category_validation():
 
 
 # Test the error handling for unknown categories
-def test_unknown_category():
+@patch("langchain_openai.chat_models.base.openai.OpenAI")
+def test_unknown_category(mock_openai):
+    # Import assistant_chain inside the test to allow for proper mocking
     with patch("app.quiz_bank", "Test quiz bank content"):
         with patch("app.ChatOpenAI") as mock_chat:
             mock_instance = mock_chat.return_value
